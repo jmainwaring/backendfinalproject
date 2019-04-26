@@ -1,14 +1,5 @@
 # startup.sh: script to create docker containers
 
-# Stop containers that are running 
-docker stop web mysql-server
-
-
-# Prune
-docker system prune -f
-
-
-
 # Create network
 docker network create sql-network
 
