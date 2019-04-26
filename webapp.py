@@ -104,20 +104,73 @@ def answer():
 	"""
 
 
-	id = request.args.get["id"]
-	user_query = request.args.get["user_query"]
+	question_id = request.json["question_id"] 
+	user_query = request.json["user_query"]
+	is_correct = False
 
 
 	db = MySQLdb.connect("mysql-server", "root", "secret", "mydb")
 	cursor = db.cursor()
-	result = cursor.execute("%s", (user_query,))
-	row = cursor.fetchone()
-	db.commit()
-	db.close() 
+	user_result = cursor.execute(user_query)
 
-	data = {'Query result': row}
+	# Error handling for results with no rows 
+	if cursor.rowcount == 0:
+		data = {"Is correct": is_correct, "Problem": "No rows returned"}
+		resp = Response(json.dumps(data), mimetype='application/json', status=200)
+		return resp
+
+
+	user_full_table = cursor.fetchall()[0][0]
+
+
+
+	correct_query_command = cursor.execute("SELECT correct_query FROM answers WHERE question_id = %s", (int(question_id),))
+	correct_query = cursor.fetchall()[0][0]
+	correct_result = cursor.execute(correct_query)
+	correct_full_table = cursor.fetchall()[0][0]
+
+
+
+	# Checking to see if the answers are equal 
+	if user_full_table == correct_full_table:
+		is_correct = True  
+
+
+
+	# Updating the completion status table
+	sql = "UPDATE questions SET completion_status = %s WHERE question_id = %s"
+	args = (True, int(question_id))
+	cursor.execute(sql, args)
+	db.commit()
+	db.close()
+
+
+
+
+	data = {"User answer": user_full_table, "Correct answer": correct_full_table, "Is correct": is_correct}
 	resp = Response(json.dumps(data), mimetype='application/json', status=200)
 	return resp
+
+
+
+
+
+
+
+
+	# Update to "true" if it's correct 
+	db.commit()
+
+
+
+
+	db.close() 
+
+
+
+
+
+
 
 	# Need something to check if answer is correct 
 
