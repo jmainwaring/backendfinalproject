@@ -7,7 +7,7 @@ import MySQLdb
 app = Flask(__name__)
 
 
-def connect():
+def connect(db="mydb"):
 	db = MySQLdb.connect("mysql-server", "root", "secret", "mydb")
 	cursor = db.cursor()
 	return db, cursor
