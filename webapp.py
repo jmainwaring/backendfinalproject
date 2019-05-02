@@ -15,6 +15,22 @@ def connect(db="mydb"):
 	return db, cursor
 
 
+def format_result(result):
+	'''
+	Takes cursor result, reformats to JSON
+	Assumes >1 row returned
+	'''
+	tasks = []
+	for row in result:
+		data = {}
+		data['question_id'] = row[0]
+		data['question'] = row[1]
+		data['difficulty'] = row[2]
+		data['is_completed'] = row[3]
+		tasks.append(data)
+	return tasks
+
+
 
 def send_tweet(question_no):
   
@@ -37,43 +53,6 @@ def send_tweet(question_no):
 
 
 
-
-@app.route('/signup', methods=["POST"])
-def new_user():
-	"""
-	Allows a new user to signup for the service 
-	"""
-
-	username = request.json["username"]
-	password = request.json["password"]
-	email = request.json["email"]
-
-
-
-
-	########################################
-	####### Additional functionality #######
-	########################################
-	# Need an "if" statement to check if the email address/username is already in use
-
-
-
-	# Adding it to the database
-	db = MySQLdb.connect("mysql-server", "root", "secret", "mydb")
-	cursor = db.cursor()
-	cursor.execute('''INSERT INTO users (username, password, email) VALUES (%s, %s, %s)''', (username, password, email))
-	db.commit()
-	db.close()
-
-	data = {"Signup status": "complete"}
-	resp = Response(json.dumps(data), mimetype='application/json', status=201)
-	return resp
-
-
-
-
-
-
 @app.route('/questions', methods=["GET"])
 def show_questions():
 	"""
@@ -87,7 +66,8 @@ def show_questions():
 	answer_table = cursor.fetchall()
 
 
-	data = {"Questions": answer_table}
+	formatted_answers = format_result(answer_table)
+	data = {"Questions": formatted_answers}
 	resp = Response(json.dumps(data), mimetype='application/json', status=200)
 	return resp
 
@@ -150,6 +130,5 @@ def answer():
 	data = {"User answer": user_full_table, "Correct answer": correct_full_table, "Is correct": is_correct}
 	resp = Response(json.dumps(data), mimetype='application/json', status=200)
 	return resp
-
 
 
